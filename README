@@ -1,0 +1,46 @@
+Levee Talk for FEMTEC 2011
+
+Multiscale Numerical Modeling of Levee Breach Processes
+
+FEMTEC 2011
+May 9 - 13
+South Lake Taho, CA
+
+C. E. Kees
+US Army ERDC, Vicksburg, MS, USA
+christopher.e.kees@usace.army.mil
+
+M. W. Farthing
+US Army ERDC, Vicksburg, MS, USA
+matthew.w.farthing@usace.army.mil
+
+I. Akkerman
+US Army ERDC, Vicksburg, MS, USA
+idoakkerman@gmail.com
+
+Y. Bazilevs
+Structural Engineering, University of Caifornia, San Diego, CA, USA
+jbazilevs@ucsd.edu
+Abstract
+
+One of the dominant failure modes of levees during ﬂood and storm
+surge events is erosion-based breach formation due to high velocity
+ﬂow over the back (land-side) slope. Modeling the breaching process
+numerically is challenging due to both physical and geometric
+complexity that develops and evolves during the overtopping event. The
+surface water ﬂows are aerated and sediment-laden mixtures in the
+supercritical and turbulent regimes. The air/water free surface may
+undergo perturbations on the same order as the depth or even
+topological change (breaking). Likewise the soil/ﬂuid interface is
+characterized by evolving headcuts, which are essentially moving
+discontinuities in the soil surface elevation. The most widely used
+models of levee breaching are nevertheless based on depth-integrated
+models of ﬂow, sediment transport, and bed morphology. In this work
+our objective is to explore models with less restrictive modeling
+assumptions, which have become computationally tractable due to
+advances in both numerical methods and high-performance computing
+hardware. In particular, we present formulations of fully
+three-dimensional ﬂow, transport, and morphological evolution for
+overtopping and breaching processes and apply recently developed ﬁnite
+element and level set methods to solve the governing equations for
+relevant test problems.

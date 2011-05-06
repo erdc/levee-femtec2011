@@ -1,0 +1,388 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+%\usepackage{minted}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+\usepackage{xspace}
+\usepackage{listings}
+%\usepackage{minted}
+\usepackage[3D]{movie15}
+\usefonttheme{structurebold}
+\mode<presentation>
+{
+  \usetheme{default}
+   \setbeamercolor{structure}{fg=black!70}
+  %\setbeamercovered{invisible}
+  \setbeamerfont{title}{size=\large}
+}
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{algorithmic}
+%\usepackage[unicode]{hyperref}%$AA 3:55, 720AM 3:40, $748.80 OZAOZF
+%how our code can be useful to ERDC in the future
+%labwide resource on numerics; and solving problems related to numerical methods and new physical formulations (e.g. femlab)
+%maybe add a couple of simulations
+\hypersetup{unicode=true,colorlinks=true,linkcolor=white,urlcolor=blue}
+
+%% The Proteus toolkit evolved to support research on new models for
+%% coastal and hydraulic processes and improvements in numerical
+%% methods. The models considered include multiphase flow in porous
+%% media, shallow water flow, turbulent free surface flow, and
+%% flow-driven processes such as sediment and species transport. Python
+%% was used for implementing high-level class hierarchies and prototyping
+%% new algorithms, while performance critical sections were optimized
+%% using compiled languages. We discuss the toolkit design,
+%% performance, and open issues.
+\newcommand{\Jrate}[1]{\stackrel{\circ}{#1}}
+\newcommand{\email}[1]{\href{mailto:#1}{\texttt{#1}}}
+\include{macros-talk}
+
+\title[petsc4py]{Multiscale Numerical Modeling of Levee Breach Processes}
+%\author[C.~Kees\inst{1} \and M.~Farthing\inst{1}]%
+\author[C.~Kees \and M.~Farthing]%
+{
+  C.~Kees\inst{1}, M.~Farthing\inst{1}, I.~Akkerman\inst{1}\inst{,2}, and Y.~Bazilevs\inst{2}\\ 
+  \email{chris.kees@us.army.mil} 
+}
+\institute[ERDC]
+{
+ \inst{1}Coastal and Hydraulics Laboratory\\
+  US Army Engineer Research and Development Center\\
+  Vicksburg, MS, USA\\
+ \inst{2}Department of Structural Engineering\\
+  University of Caifornia\\
+  San Diego, CA, USA
+}
+\date [FEMTEC '11]
+{
+  FEMTEC\\
+  May 9 -- 13, 2011\\
+  South Lake Tahoe, California
+}
+\pgfdeclareimage[height=0.5cm]{corps_logo}{corps_logo}
+\logo{\pgfuseimage{corps_logo}}
+
+%\AtBeginSection[]
+%{
+%  \begin{frame}
+%    \tableofcontents[currentsection]
+%  \end{frame}
+%}
+
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>
+%    \frametitle{Outline}
+%    \tableofcontents[currentsection,currentsubsection]
+%  \end{frame}
+%}
+
+%\AtBeginSection[]
+%{
+%  \begin{frame}
+%    \tableofcontents[currentsection]
+%  \end{frame}
+%}
+
+\newcommand{\Cpp}{C\protect\raisebox{.18ex}{++}\xspace}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section*{Outline}
+
+\begin{frame}
+\frametitle{Acknowledgments}
+\begin{itemize}
+\item Lea Jenkins (Clemson)
+\item John Chrispell (Tulane)
+\item Tim Kelley and Scott Pope (NCSU)
+\item Clint Dawson, Serge Prudhomme, Steve Mattis, Tim Povich (UT/ICES)
+\item Stacy Howington, Jerry Ballard, Maureen Corcoran, John Peters (ERDC)
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Outline}
+  \begin{itemize}
+    \item Overview
+    \item Physics API
+    \item Lessons Learned
+  \end{itemize}
+  %\tableofcontents %this is invisible, can't seem to make it visible
+\end{frame}
+
+\section{Overview}
+
+\begin{frame}
+  \frametitle{Why do we need to simulate Levees?}
+  \begin{itemize}
+  \item Levees are structures build primarily of earthen materials in order to
+    protect large areas from high water.
+  \item They typically run along one or both sides of a waterway for very
+    large distances and therefore employ cheaper construction
+    than dams.
+  \item Many are very old and all require continuous maintenance.
+  \item We need to model their performance in order to identify
+    potential failures and to design new and/or improved levees.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How do levees function (or fail)?}
+    \begin{itemize}
+    \item Earthen materials don't hold back water like a
+      concrete dam.
+    \item The free surface (air/water interface) is continuous as it
+      passes from the waterway into the levee.
+    \item As water flows through porous media it loses energy to the
+      medium through friction, which causes a drop in water pressure.
+    \item The result is a free surface that slopes down away from the
+      flood side of the levee until it either forms a ``seepage face''
+      on the land side of the levee or (preferably) stays under ground.
+    \item Failure can result from boils/pipes or from large scale
+      stresses arising from pore water pressure and gravity.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{2D Seepage Analysis}
+\includegraphics[width=4.35in]{sacSteady30.png}
+\end{frame}  
+
+\begin{frame}
+\frametitle{2D Stability}
+\includegraphics[width=2.15in]{wildwood_e.jpg}\includegraphics[width=2.15in]{slopes_e.png}
+\end{frame}  
+
+\begin{frame}
+\frametitle{2D Stability Analysis}
+\includegraphics[width=4.35in]{screen-slope-full.png}
+\end{frame}  
+
+\section{Seepage Modeling}
+
+\begin{frame}
+  \frametitle{Darcy's law and single phase flow in porous media}
+  \begin{itemize}
+    \item The water momentum balance in the porous medium takes the
+      special form of Darcy's law, which assumes that microscopic
+      momentum loss to the soil is linear in the velocity and that
+      macroscopic inertial and viscous terms are negligible:
+    \begin{equation}
+      \grad p - \rho \vec g  + \ten k^{-1} \vec v = 0
+    \end{equation}
+    \item Combined with fluid mass conservation we usually write the flow equation as
+      \begin{equation}
+        \deld  -\ten K \grad \phi = 0 
+      \end{equation}
+      where $\phi = \frac{p}{\rho\|g\|} + z$ is known as the hydraulic head.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Modeling seepage}
+  \begin{itemize}
+    \item The seepage problem can be modeled as a free boundary
+      problem for single phase flow or as two-phase flow in porous
+      media.
+    \item In either case boundary conditions along a portion of the
+      levee and land surface we have a Signiorini boundary condition:
+      \begin{equation}
+\psi(\vec q \cdot \vec n) = 0 \quad \vec q \cdot \vec n \geq 0 \quad
+\psi \leq 0 \; \vec x \in \Gamma{sf}
+      \end{equation}
+    \item We will focus on the two-phase approach, more specifically
+      Richards' equation, which replaces $K$ with a nonlinear relative
+      conductivity $K(\phi)$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Finite element formulation}
+  \begin{itemize}
+  \item The quantity of interest in seepage modeling is the pressure
+    so we use standard Galerkin finite elements on tetrahedra with
+    nodal quadrature and element-based material properties.
+  \item We use weak enforcement of boundary conditions, for global
+    conservation and easier enforcement of the Signiorini condition.
+  \item The nonlinear system is solved with Newton's method and a
+    simple linear search and various parallel solvers/preconditioners
+    from PETSc.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \includemovie[controls,poster]{4.25in}{2.5in}{phwt2d.avi}
+\end{frame}
+
+\begin{frame}
+\includegraphics[width=4.35in]{pocketLevee_nopipe.png}
+\end{frame}
+
+\begin{frame}
+\includegraphics[width=4.35in]{pocketLevee3d_pipe.png}
+\end{frame}
+
+\section{Stability Modeling}
+
+\begin{frame}
+  \frametitle{Elasto-Plastic Soil Mechanics}
+  \begin{itemize}
+    \item As with the flow, we model the deformation of the levee by
+      treating soil/fluid mixture as a continuum.
+      \begin{equation}
+        - \deld \ten \sigma  + \vec f = 0
+      \end{equation}
+      where $\ten \sigma$ is the effective stress tensor, and the pore
+      pressure gradient is included in the body forces, $\vec f$, given by
+      \begin{equation}
+        \vec f = -\rho_s \vec g + \grad p
+      \end{equation}
+    \item The most significant difficulty is the fact that we have to solve a local, nonlinear differential equation involving stress, strain, and local ``thermodynamic'' variables (especially near slope failures) becomes the soil undergoes {\em plastic} strains.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stress/Strain rates} A general elastic-plastic material
+  response with isotropic hardening given in terms of the Jaumann rate
+  of effective stress is
+\begin{eqnarray}
+\Jrate{\ten{ \sigma}}  &=& \ten D^e (\dot{\ten \epsilon} - \dot{\ten \epsilon}^p) \\
+\dot{\ten \epsilon}^p &=& \dot{\lambda} \ten r \\
+\dot{q} &=& \dot{\lambda} h \\
+\dot{\lambda} &\geq& 0 \\
+f(\sigma,q) &\leq& 0
+\end{eqnarray}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Integration of the Stress rate} Writing the rates as
+  backward differences and eliminating the time scale since the
+  equation is homogeneous gives an algebraic system at each quadrature
+  point:
+  \begin{eqnarray}
+    \Delta \sigma  &=& \ten D^e (\Delta \ten \epsilon - \Delta \ten \epsilon^p) \\
+    \Delta \ten \epsilon &=& \Delta \lambda \ten r(\sigma^p) \\
+    \Delta q &=& \Delta \lambda h(\sigma^p) \\
+    \Delta \lambda &\geq& 0 \\
+    f(\sigma^{n+1},q^{n+1}) &\leq& 0 
+  \end{eqnarray}
+where $\ten \sigma^p = \ten D^e \ten \epsilon^{n+1}$ is the so-called
+elastic predictor.
+\end{frame}
+
+\begin{frame}
+\frametitle{Finite element formulation}
+\begin{itemize}
+\item Standard linear tetrahedral elements are too ``stiff'' and
+  make the structure appear more stable than it is.
+\item In this work we use quadratic tetrahedral elements.
+\item Structural failure is defined as the point when no stable
+  equilibrium solution can be found or when the ratio of plastic
+  work to total work becomes large enough.
+\item There is typically a spherical failure surface for steep
+  slopes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Soil Mechanics Results: Stable Slope}
+\includegraphics[width=4.35in]{mcslope.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{Soil Mechanics Results: Slope Failure}
+\includegraphics[width=4.35in]{sgfailure.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{Coupled Seepage and Stability}
+\includegraphics[width=4.35in]{sacseepstab.png}
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}
+  \frametitle{Ongoing/Future Work}
+  \begin{itemize}
+  \item Optimizing performance on HPC machines.
+  \item Integration with existing tools (ADH, FEMhub, Sage).
+  \item Fluid/Solid interaction (surface water flow, erosion).
+  \item Homogenization/upscaling for porous materials and vegetation.
+  \item Material characterization.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{LiDAR root scans}
+\includegraphics[width=4.35in]{fullRootScan.jpg}
+\end{frame}
+
+\begin{frame}
+\frametitle{Triangulated surface reconstruction}
+\includegraphics[width=4.35in]{rootsPoissonRecon.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{References}
+  \begin{footnotesize}
+    \begin{itemize}
+      
+    \item Locally conservative, stabilized finite element methods for
+      variably saturated flow. C. E. Kees, M. W. Farthing, and C. N.
+      Dawson (2008) {\em Computer Methods in Applied Mechanics and
+        Engineering}, 197, 4610-4625.
+      
+    \item A conservative flux for the continuous Galerkin method based
+      on discontinuous enrichment (2004) M. G. Larson and
+      A. J. Niklasson. {\em CALCOLO}, 41, 65-76, 2004.
+      
+    \item Efficient Steady-State Solution Techniques for Variably
+      Saturated Groundwater Flow, M. W. Farthing, C. E. Kees,
+      T. S. Coffey, C. T. Kelley, and C. T.  Miller (2003) {\em Advances
+        in Water Resources}, 26(8), 833-849
+      
+    \item Versatile Two-level Schwarz Preconditioners for Multiphase Flow,
+      C. E. Kees, C. T. Miller, E. W. Jenkins, and C. T. Kelley (2003)
+      {\em Computational Geosciences}, 7(2), 91-114
+      
+    \item Mixed Finite Elements and Higher-Order Temporal Approximations
+      for Variably Saturated Groundwater Flow, M. W. Farthing, C. E. Kees,
+      and C. T. Miller (2003) {\em Advances in Water Resources}, 26(4),
+      373-394
+      
+    \end{itemize}
+  \end{footnotesize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Collaboration, Funding, and Employment Opportunities}
+  \begin{itemize}
+  \item Partnering and contracting: {\footnotesize
+    \url{erdc.usace.army.mil}}
+\begin{itemize}
+  \item The Broad Area Announcement (BAA) is a standing call for basic
+    and applied research proposals
+  \item Cooperative Research and Development Agreements (CRADAs) can
+    be developed to share staff, equipment, and facilities
+\end{itemize}
+  \item Post-doctoral positions:\\ {\footnotesize
+    \url{www.orau.org/maryland/participants/chl\_projects.html}}
+  \item Army Research Office grants in engineering, physics, and
+    mathematics:\\ {\footnotesize \url{www.aro.army.mil}}
+  \end{itemize}
+\begin{center} \large \alert{Thank You!} \end{center}
+\end{frame}
+
+\end{document}
+
+% Local Variables:
+% mode: latex
+% TeX-PDF-mode: t
+% End:
