@@ -23,7 +23,7 @@
 %how our code can be useful to ERDC in the future
 %labwide resource on numerics; and solving problems related to numerical methods and new physical formulations (e.g. femlab)
 %maybe add a couple of simulations
-\hypersetup{unicode=true,colorlinks=true,linkcolor=white,urlcolor=blue}
+\hypersetup{unicode=true,colorlinks=true,linkcolor=black,urlcolor=blue}
 
 %% The Proteus toolkit evolved to support research on new models for
 %% coastal and hydraulic processes and improvements in numerical
@@ -163,10 +163,10 @@
 
 \begin{frame}
 \frametitle{2D Stability Analysis}
-\includegraphics[width=4.35in]{screen-slope-full.png}
+  \includemovie[controls,poster]{4.25in}{2.5in}{h.mov}
 \end{frame}  
 
-\section{Seepage Modeling}
+\section{Subsurface Processes}
 
 \begin{frame}
   \frametitle{Darcy's law and single phase flow in porous media}
@@ -223,7 +223,22 @@
 \end{frame}
 
 \begin{frame}
-  \includemovie[controls,poster]{4.25in}{2.5in}{phwt2d.avi}
+\frametitle{Finite element formulation, ctd.}
+\begin{eqnarray}
+  (m(\psi_h),w_h)_{L_2(\Omega)} + (K(\psi_h)\grad \phi_h,\grad w_h)_{L_2(\Omega)} + && \\
+(-K(\psi_h^-) \grad \phi_h^- \cdot \vec  n + \gamma (\psi_h^- - \psi_h^D),w_h^-)_{L_2(\Gamma^D)} &=& 0
+\end{eqnarray}
+where $\Gamma^D$ is the actual portion of $\partial \Omega$ with
+Dirichlet conditions AND the portion of the Signiorini boundary with
+positive with
+\begin{equation}
+-K(\psi_h^-) \grad \phi_h^- \cdot \vec n + \gamma (\psi_h^-  - \psi_h^D) > 0
+\end{equation}
+That is, when flow is out of the domain on the Signiorini boundary, enforce $\psi_h^D$
+\end{frame}
+
+\begin{frame}
+  \includemovie[controls,poster]{4.25in}{2.5in}{phwt2d.mov}
 \end{frame}
 
 \begin{frame}
@@ -233,8 +248,6 @@
 \begin{frame}
 \includegraphics[width=4.35in]{pocketLevee3d_pipe.png}
 \end{frame}
-
-\section{Stability Modeling}
 
 \begin{frame}
   \frametitle{Elasto-Plastic Soil Mechanics}
@@ -249,7 +262,11 @@
       \begin{equation}
         \vec f = -\rho_s \vec g + \grad p
       \end{equation}
-    \item The most significant difficulty is the fact that we have to solve a local, nonlinear differential equation involving stress, strain, and local ``thermodynamic'' variables (especially near slope failures) becomes the soil undergoes {\em plastic} strains.
+    \item The most significant difficulty is the fact that we have to
+      solve a local, nonlinear differential equation involving stress,
+      strain, and local ``thermodynamic'' variables (especially near
+      slope failures) becomes the soil undergoes {\em plastic}
+      strains.
   \end{itemize}
 \end{frame}
 
@@ -273,13 +290,12 @@ f(\sigma,q) &\leq& 0
   point:
   \begin{eqnarray}
     \Delta \sigma  &=& \ten D^e (\Delta \ten \epsilon - \Delta \ten \epsilon^p) \\
-    \Delta \ten \epsilon &=& \Delta \lambda \ten r(\sigma^p) \\
-    \Delta q &=& \Delta \lambda h(\sigma^p) \\
+    \Delta \ten \epsilon &=& \Delta \lambda \ten r(\sigma) \\
+    \Delta q &=& \Delta \lambda h(\sigma) \\
     \Delta \lambda &\geq& 0 \\
     f(\sigma^{n+1},q^{n+1}) &\leq& 0 
   \end{eqnarray}
-where $\ten \sigma^p = \ten D^e \ten \epsilon^{n+1}$ is the so-called
-elastic predictor.
+where $\ten \sigma = \sigma_n + \Delta \sigma$.
 \end{frame}
 
 \begin{frame}
@@ -308,20 +324,7 @@ elastic predictor.
 
 \begin{frame}
 \frametitle{Coupled Seepage and Stability}
-\includegraphics[width=4.35in]{sacseepstab.png}
-\end{frame}
-
-\section{Conclusions}
-
-\begin{frame}
-  \frametitle{Ongoing/Future Work}
-  \begin{itemize}
-  \item Optimizing performance on HPC machines.
-  \item Integration with existing tools (ADH, FEMhub, Sage).
-  \item Fluid/Solid interaction (surface water flow, erosion).
-  \item Homogenization/upscaling for porous materials and vegetation.
-  \item Material characterization.
-  \end{itemize}
+\includegraphics[width=4.35in]{gl_6.png}
 \end{frame}
 
 \begin{frame}
@@ -332,10 +335,144 @@ elastic predictor.
 \begin{frame}
 \frametitle{Triangulated surface reconstruction}
 \includegraphics[width=4.35in]{rootsPoissonRecon.png}
+cite needed for surface recon code
 \end{frame}
 
 \begin{frame}
-  \frametitle{References}
+\frametitle{Hand-generated surface reconstruction}
+\includegraphics[width=4.35in]{jerry_orig_root_surface.png}
+Courtesy Jerry Ballard (cite needed)
+\end{frame}
+
+\begin{frame}
+\frametitle{Material reclassification approach}
+\includegraphics[width=4.35in]{root_zone_coarse_1039766_element_a0_001_tol0_333_block_domain.png}
+\end{frame}
+
+\section{Surface Processes}
+
+\begin{frame}{Failure by Overtopping}
+\begin{itemize}
+\item High-velocity flow forms on land-side slope
+\item Shear stress generates rapid erosion 
+\item Head cut evolves up slope to generate failure \cite{Briaud_Chen_etal_08}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Process regimes/scales}
+\begin{itemize}
+\item Sediment-laden mixtures
+\item Supercritical and turbulent flow
+\item Free surface deformations proportional to depth
+\item Fully three-dimensional deformations of free surface and sediment layer (no height function)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Existing approaches}
+\begin{itemize}
+\item Depth-averaged and partly time-averaged (waves)
+\item Surface and layer height are unknowns
+\item Constitutive relations for morphological processes posed at space/time-integrated scale.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{St. Venant/Exner System}
+\begin{eqnarray}
+  \pd{H}{t} + \nabla^{x,y} \cdot \vec U &=& 0\\ %water mass consrv
+  \pd{H \vec U}{t} + \nabla^{x,y} \cdot \pl H \vec U \otimes \vec U - \ten{\sigma} \pr  &=& g H \grad{z^{wb}} + S^w \\ %water mom consrv
+  \pd{\pl H C \pr}{t} + \nabla^{x,y}\cdot \vec q^s &=& E - D \\ %suspended sed concen
+  \pd{\epsilon^s z^{wb}}{t} + \nabla^{x,y} \cdot \pl \vec q^s + \vec q^b \pr &=& - \pd{\pl H C \pr}{t} %moving bed
+\end{eqnarray}
+\end{frame}
+
+\begin{frame}
+\frametitle{Field variables in depth-averaged approach}
+\begin{center}
+  \def\svgwidth{\textwidth}
+  \input{standardModel.pdf_tex}
+\end{center}
+\end{frame}
+
+\section{Approach}
+
+\begin{frame}
+\frametitle{3D Multiphase Approach}
+\begin{itemize}
+\item Use a fully three-dimensional approach
+\item Replace the height function for air/water interface using the level-set approach
+\item Replace the bed height function using mixture formulation for sediment/fluid mixture
+\item This results in two Navier-Stokes type systems plus some auxiliary equations: $\kappa-\epsilon$(turbulence), $\phi$ (level set)
+\item Sediment/fluid coupling formulated in terms of closure relations for fluid/sediment interaction force, $f^{fs}$, stress, and turbulence production.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Basic 3D Multiphase Model}
+\begin{eqnarray}
+  \pd{\rho^f \epsilon^f}{t} + \deld \rho^f \epsilon^f \vec v^f &=& 0 \\ 
+  \pd{\rho^f \epsilon^f \vec v^f }{t} + \deld \sbl \rho^f \epsilon^f \vec v^f \otimes \vec v^f - \ten{\sigma^f} \sbr&=& \rho^f \epsilon^f \vec g  - \vec f^{fs} \\
+  \pd{\rho^s \epsilon^s}{t} + \deld \rho^s \epsilon^s \vec v^s &=& 0 \\ 
+  \pd{\rho^s \epsilon^s \vec v^s}{t} + \deld \sbl \rho^s \epsilon^s \vec v^s \otimes \vec v^s - \ten{\sigma^s} \sbr &=& \rho^s \epsilon^s \vec g  + \vec f^{fs} \\
+  \pd{\phi^{aw}}{t} + \epsilon^f \vec v^f \cdot  \grad \phi^{aw} &=& 0 
+\end{eqnarray}
+\end{frame}
+
+\begin{frame}
+\frametitle{Field Variables in 3D Multiphase Model}
+\begin{center}
+  \def\svgwidth{\textwidth}
+  \input{newModel.pdf_tex}
+\end{center}
+\end{frame}
+
+%% \section{Publication Plan}
+
+%% \begin{frame}
+%% \frametitle{Existing Work}
+%% \begin{itemize}
+%% \item Bakhtyar et. al \cite{Bakhtyar_Barry_etal_09,Bakhtyar_Barry_etal_09b,Bakhtyar_Barry_etal_10} have studied this approach for 2D (cross-shore) beach morphology using a Volume-of-Fluid code.
+%% \item Drake and Calantoni described the sediment/fluid interaction force \cite{Drake_Calantoni_01}
+%% \item Elghobashi and Abou-Arab described the multiphse turbulence model \cite{Elghobashi_Abou-Arab_83}
+%% \end{itemize}
+%% \end{frame}
+
+%% \begin{frame}
+%% \frametitle{Publication Plan}
+%% \begin{itemize}
+%% \item ``Three-dimensional numerical simulation of two-phase flow for sediment transport in the inner-surf and swash zones using a hybrid level-set/VOF approach'', Kees, Farthing,...
+%% \item Extend Bakhtyar's model to 3D unstructured finite elements, compare to prior 2D work and experiments.
+%% \item Add overtopping test problem
+%% \end{itemize}
+%% \end{frame}
+ 
+\section{Results}
+
+\begin{frame}
+\frametitle{Wavetank Test Problem}
+\includegraphics[width=\textwidth,keepaspectratio=true]{wavetank.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Beach Profile Evolution}
+\includegraphics[width=\textwidth,keepaspectratio=true]{beachProfile.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{MARIN Experiment}
+\includemovie[controls,poster]{\textwidth}{0.75\textheight}{marin500K.mov}
+\end{frame}
+
+\begin{frame}
+\frametitle{References (Surface)}
+\bibliographystyle{plain}
+\tiny{\bibliography{femtec2011.bib}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{References (Subsurface)}
   \begin{footnotesize}
     \begin{itemize}
       
@@ -361,7 +498,6 @@ elastic predictor.
       for Variably Saturated Groundwater Flow, M. W. Farthing, C. E. Kees,
       and C. T. Miller (2003) {\em Advances in Water Resources}, 26(4),
       373-394
-      
     \end{itemize}
   \end{footnotesize}
 \end{frame}
