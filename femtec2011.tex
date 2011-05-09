@@ -49,7 +49,8 @@
 {
  \inst{1}Coastal and Hydraulics Laboratory\\
   US Army Engineer Research and Development Center\\
-  Vicksburg, MS, USA\\
+  Vicksburg, MS, USA\\[10pt]
+%\vspace{10pt}
  \inst{2}Department of Structural Engineering\\
   University of Caifornia\\
   San Diego, CA, USA
@@ -57,8 +58,7 @@
 \date [FEMTEC '11]
 {
   FEMTEC\\
-  May 9 -- 13, 2011\\
-  South Lake Tahoe, California
+  May 9 -- 13, 2011
 }
 \pgfdeclareimage[height=0.5cm]{corps_logo}{corps_logo}
 \logo{\pgfuseimage{corps_logo}}
@@ -98,10 +98,10 @@
 \begin{frame}
 \frametitle{Acknowledgments}
 \begin{itemize}
-\item Lea Jenkins (Clemson)
-\item John Chrispell (Tulane)
-\item Tim Kelley and Scott Pope (NCSU)
-\item Clint Dawson, Serge Prudhomme, Steve Mattis, Tim Povich (UT/ICES)
+\item Lea Jenkins (Clemson University)
+\item John Chrispell (Indiana University of Pennsylvania)
+\item Tim Kelley (North Carolina State University)
+\item Clint Dawson, Steve Mattis, Tim Povich (University of Texas at Austin)
 \item Stacy Howington, Jerry Ballard, Maureen Corcoran, John Peters (ERDC)
 \end{itemize}
 \end{frame}
@@ -111,8 +111,9 @@
   \frametitle{Outline}
   \begin{itemize}
     \item Overview
-    \item Physics API
-    \item Lessons Learned
+    \item Subsurface Processes
+    \item Surface Processes
+    \item Open Issues
   \end{itemize}
   %\tableofcontents %this is invisible, can't seem to make it visible
 \end{frame}
@@ -122,7 +123,7 @@
 \begin{frame}
   \frametitle{Why do we need to simulate Levees?}
   \begin{itemize}
-  \item Levees are structures build primarily of earthen materials in order to
+  \item Levees are structures built primarily of earthen materials in order to
     protect large areas from high water.
   \item They typically run along one or both sides of a waterway for very
     large distances and therefore employ cheaper construction
@@ -181,7 +182,8 @@
       \begin{equation}
         \deld  -\ten K \grad \phi = 0 
       \end{equation}
-      where $\phi = \frac{p}{\rho\|g\|} + z$ is known as the hydraulic head.
+      where $\phi = \frac{p}{\rho\|g\|} + z = \psi + z$ is known as the hydraulic head and $\psi$ is known as the pressure head.
+
   \end{itemize}
 \end{frame}
 
@@ -194,12 +196,15 @@
     \item In either case boundary conditions along a portion of the
       levee and land surface we have a Signiorini boundary condition:
       \begin{equation}
-\psi(\vec q \cdot \vec n) = 0 \quad \vec q \cdot \vec n \geq 0 \quad
+\psi(\vec v \cdot \vec n) = 0 \quad \vec v \cdot \vec n \geq 0 \quad
 \psi \leq 0 \; \vec x \in \Gamma{sf}
       \end{equation}
     \item We will focus on the two-phase approach, more specifically
       Richards' equation, which replaces $K$ with a nonlinear relative
-      conductivity $K(\phi)$
+      conductivity $K(\psi)$
+      \begin{equation}
+        \pd{m(\psi)}{t} + \deld -K(\psi) \grad \phi(\psi) = 0 
+      \end{equation}
   \end{itemize}
 \end{frame}
 
