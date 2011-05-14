@@ -57,7 +57,8 @@
 }
 \date [FEMTEC '11]
 {
-  FEMTEC\\
+  FEMTEC 2011\\
+  South Lake Tahoe\\
   May 9 -- 13, 2011
 }
 \pgfdeclareimage[height=0.5cm]{corps_logo}{corps_logo}
@@ -123,10 +124,10 @@
 \begin{frame}
   \frametitle{Why do we need to simulate Levees?}
   \begin{itemize}
-  \item Levees are structures built primarily of earthen materials in order to
-    protect large areas from high water.
+  \item Levees are structures intended to protect large areas from
+    high water and are constructed primarily of porous materials.
   \item They typically run along one or both sides of a waterway for very
-    large distances and therefore employ cheaper construction
+    large distances and, therefore, employ cheaper construction
     than dams.
   \item Many are very old and all require continuous maintenance.
   \item We need to model their performance in order to identify
@@ -146,27 +147,14 @@
     \item The result is a free surface that slopes down away from the
       flood side of the levee until it either forms a ``seepage face''
       on the land side of the levee or (preferably) stays under ground.
-    \item Failure can result from boils/pipes or from large scale
-      stresses arising from pore water pressure and gravity.
+    \item Failure can result from large scale stresses arising from
+      pore water pressure and gravity, from erosion due to seepage,
+      and from erosion due to overtopping.
     \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{2D Seepage Analysis}
-\includegraphics[width=4.35in]{sacSteady30.png}
-\end{frame}  
-
-\begin{frame}
-\frametitle{2D Stability}
-\includegraphics[width=2.15in]{wildwood_e.jpg}\includegraphics[width=2.15in]{slopes_e.png}
-\end{frame}  
-
-\begin{frame}
-\frametitle{2D Stability Analysis}
-  \includemovie[controls,poster]{4.25in}{2.5in}{h.mov}
-\end{frame}  
-
 \section{Subsurface Processes}
+
 
 \begin{frame}
   \frametitle{Darcy's law and single phase flow in porous media}
@@ -193,11 +181,11 @@
     \item The seepage problem can be modeled as a free boundary
       problem for single phase flow or as two-phase flow in porous
       media.
-    \item In either case boundary conditions along a portion of the
-      levee and land surface we have a Signiorini boundary condition:
+    \item Boundary conditions along a portion of the
+      levee and land surface are Signiorini boundary conditions:
       \begin{equation}
 \psi(\vec v \cdot \vec n) = 0 \quad \vec v \cdot \vec n \geq 0 \quad
-\psi \leq 0 \; \vec x \in \Gamma{sf}
+\psi \leq 0 \; \vec x \in \Gamma^{S}
       \end{equation}
     \item We will focus on the two-phase approach, more specifically
       Richards' equation, which replaces $K$ with a nonlinear relative
@@ -224,17 +212,17 @@
 
 \begin{frame}
 \frametitle{Finite element formulation, ctd.}
+Find $\psi_h \in V_h(\Omega)$ such that
 \begin{eqnarray}
   (m(\psi_h),w_h)_{L_2(\Omega)} + (K(\psi_h)\grad \phi_h,\grad w_h)_{L_2(\Omega)} + && \\
-(-K(\psi_h^-) \grad \phi_h^- \cdot \vec  n + \gamma (\psi_h^- - \psi_h^D),w_h^-)_{L_2(\Gamma^D)} &=& 0
+(-K(\psi_h^-) \grad \phi_h^- \cdot \vec  n + \gamma (\psi_h^- - \psi^D),w_h^-)_{L_2(\Gamma^{D^*})} &=& 0 \quad \forall w_h \in W_h(\Omega)  \nonumber
 \end{eqnarray}
-where $\Gamma^D$ is the actual portion of $\partial \Omega$ with
+where $\Gamma^{D^*}$ is the actual portion of $\partial \Omega$ with
 Dirichlet conditions AND the portion of the Signiorini boundary with
-positive with
 \begin{equation}
--K(\psi_h^-) \grad \phi_h^- \cdot \vec n + \gamma (\psi_h^-  - \psi_h^D) > 0
+-K(\psi_h^-) \grad \phi_h^- \cdot \vec n + \gamma (\psi_h^-  - \psi^D) > 0
 \end{equation}
-That is, when flow is out of the domain on the Signiorini boundary, enforce $\psi_h^D$
+That is, when flow is out of the domain on the Signiorini boundary, weakly enforce $\psi^D$
 \end{frame}
 
 \begin{frame}
@@ -257,15 +245,11 @@ That is, when flow is out of the domain on the Signiorini boundary, enforce $\ps
       \begin{equation}
         - \deld \ten \sigma  + \vec f = 0
       \end{equation}
-      where $\ten \sigma$ is the effective stress tensor, and the pore
-      pressure gradient is included in the body forces, $\vec f$, given by
-      \begin{equation}
-        \vec f = -\rho_s \vec g + \grad p
-      \end{equation}
+      where $\ten \sigma$ is the effective stress tensor, which includes the pressure head from the seepage calculation.
     \item The most significant difficulty is the fact that we have to
       solve a local, nonlinear differential equation involving stress,
       strain, and local ``thermodynamic'' variables (especially near
-      slope failures) becomes the soil undergoes {\em plastic}
+      slope failures) because the soil undergoes {\em plastic}
       strains.
   \end{itemize}
 \end{frame}
@@ -276,8 +260,8 @@ That is, when flow is out of the domain on the Signiorini boundary, enforce $\ps
   of effective stress is
 \begin{eqnarray}
 \Jrate{\ten{ \sigma}}  &=& \ten D^e (\dot{\ten \epsilon} - \dot{\ten \epsilon}^p) \\
-\dot{\ten \epsilon}^p &=& \dot{\lambda} \ten r \\
-\dot{q} &=& \dot{\lambda} h \\
+\dot{\ten \epsilon}^p &=& \dot{\lambda} \ten r(\sigma,q) \\
+\dot{q} &=& \dot{\lambda} h(\sigma,q) \\
 \dot{\lambda} &\geq& 0 \\
 f(\sigma,q) &\leq& 0
 \end{eqnarray}
@@ -290,12 +274,12 @@ f(\sigma,q) &\leq& 0
   point:
   \begin{eqnarray}
     \Delta \sigma  &=& \ten D^e (\Delta \ten \epsilon - \Delta \ten \epsilon^p) \\
-    \Delta \ten \epsilon &=& \Delta \lambda \ten r(\sigma) \\
-    \Delta q &=& \Delta \lambda h(\sigma) \\
+    \Delta \ten \epsilon &=& \Delta \lambda \ten r(\sigma^{n+1},q^{n+1}) \\
+    \Delta q &=& \Delta \lambda h(\sigma^{n+1},q^{n+1}) \\
     \Delta \lambda &\geq& 0 \\
     f(\sigma^{n+1},q^{n+1}) &\leq& 0 
   \end{eqnarray}
-where $\ten \sigma = \sigma_n + \Delta \sigma$.
+where $\sigma^{n+1} = \sigma^n + \Delta \sigma$.
 \end{frame}
 
 \begin{frame}
@@ -303,7 +287,7 @@ where $\ten \sigma = \sigma_n + \Delta \sigma$.
 \begin{itemize}
 \item Standard linear tetrahedral elements are too ``stiff'' and
   make the structure appear more stable than it is.
-\item In this work we use quadratic tetrahedral elements.
+\item In this work we use quadratic and linear tetrahedral elements.
 \item Structural failure is defined as the point when no stable
   equilibrium solution can be found or when the ratio of plastic
   work to total work becomes large enough.
@@ -312,42 +296,82 @@ where $\ten \sigma = \sigma_n + \Delta \sigma$.
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{Soil Mechanics Results: Stable Slope}
-\includegraphics[width=4.35in]{mcslope.png}
-\end{frame}
+%% \begin{frame}
+%% \frametitle{2D Seepage Analysis}
+%% \includegraphics[width=4.35in]{sacSteady30.png}
+%% \end{frame}  
 
 \begin{frame}
-\frametitle{Soil Mechanics Results: Slope Failure}
-\includegraphics[width=4.35in]{sgfailure.png}
-\end{frame}
+\frametitle{Slope failures}
+\includegraphics[width=2.15in]{wildwood_e.jpg}\includegraphics[width=2.15in]{slopes_e.png}
+\end{frame}  
+
+\begin{frame}
+\frametitle{Slope stability analysis}
+  \includemovie[controls,poster]{4.25in}{2.5in}{h.mov}
+\end{frame}  
+
+%% \begin{frame}
+%% \frametitle{Soil Mechanics Results: Stable Slope}
+%% \includegraphics[width=4.35in]{mcslope.png}
+%% \end{frame}
+
+%% \begin{frame}
+%% \frametitle{Soil Mechanics Results: Slope Failure}
+%% \includegraphics[width=4.35in]{sgfailure.png}
+%% \end{frame}
 
 \begin{frame}
 \frametitle{Coupled Seepage and Stability}
-\includegraphics[width=4.35in]{gl_6.png}
+\includegraphics[width=2.0in]{re_gl_6.png}\hspace{12pt}
+\includegraphics[width=2.0in]{gl_6_dp.png}
 \end{frame}
 
 \begin{frame}
 \frametitle{LiDAR root scans}
-\includegraphics[width=4.35in]{fullRootScan.jpg}
+\includegraphics[width=4.35in,height=2.0in]{fullRootScan.jpg}
 \end{frame}
 
 \begin{frame}
 \frametitle{Triangulated surface reconstruction}
-\includegraphics[width=4.35in]{rootsPoissonRecon.png}
-cite needed for surface recon code
+\includegraphics[width=4.35in,height=2.0in]{rootsPoissonRecon.png}
+
+Kazhdan, M. M., M. Bolitho, and H. Hoppe. 2006. Poisson surface reconstruction. Eurographics Symposium on Geometry Processing.
 \end{frame}
 
 \begin{frame}
 \frametitle{Hand-generated surface reconstruction}
-\includegraphics[width=4.35in]{jerry_orig_root_surface.png}
-Courtesy Jerry Ballard (cite needed)
+\includegraphics[width=4.35in,height=2in]{jerry_orig_root_surface.png}
+
+Ballard, J.R., Jr. 2011. A Three-dimensional heat and mass transport model for a tree within a forest. Ph.D. dissertation, Mississippi State University. 
 \end{frame}
 
 \begin{frame}
 \frametitle{Material reclassification approach}
 \includegraphics[width=4.35in]{root_zone_coarse_1039766_element_a0_001_tol0_333_block_domain.png}
 \end{frame}
+
+\begin{frame}
+\frametitle{Seepage if root-soil is low-permeability}
+\includegraphics[width=4.35in]{seepage_on_cutout_root_psi_zoom_head_contours.png}
+%  \includemovie[controls,poster]{4.25in}{2.5in}{dispb1.mov}
+\end{frame}  
+
+\begin{frame}
+\frametitle{Seepage if root-soil is low-permeability (zoom)}
+\includegraphics[width=4.35in]{seepage_on_cutout_root_psi_zoom.png}
+%  \includemovie[controls,poster]{4.25in}{2.5in}{dispb1.mov}
+\end{frame}  
+
+\begin{frame}
+\frametitle{Stability with root-soil strengthening marginal}
+  \includemovie[controls,poster]{4.25in}{2.5in}{dispb1.mov}
+\end{frame}  
+
+\begin{frame}
+\frametitle{Stability with root-soil strengthening x1000}
+  \includemovie[controls,poster]{4.25in}{2.5in}{dispb1000.mov}
+\end{frame}  
 
 \section{Surface Processes}
 
@@ -463,6 +487,16 @@ Courtesy Jerry Ballard (cite needed)
 \begin{frame}
 \frametitle{MARIN Experiment}
 \includemovie[controls,poster]{\textwidth}{0.75\textheight}{marin500K.mov}
+\end{frame}
+
+\begin{frame}
+\frametitle{Open Issues}
+\begin{itemize}
+\item Geometry pre-processing and mesh generation
+\item $hp$-adaptivity
+\item Scalable, robust solvers
+\item Operator splitting (or not)
+\end{itemize}
 \end{frame}
 
 \begin{frame}
